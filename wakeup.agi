@@ -420,7 +420,7 @@ def make_callback_file(ext: str) -> Path:
     tmp.write_text(
         f"; 알림전화 콜백 -> 내선 {ext}\n"
         f"Channel: Local/{ext}@{CB_DIAL_CTX}/n\n"
-        f'CallerID: "알림전화" <7000>\n'
+        f'CallerID: "시간 알림 서비스" <7000>\n'
         # 즉시(0초) 걸므로 원 통화가 채 안 끊겨 잠깐 통화중일 수 있습니다.
         # 그 경우 3초 뒤 한 번 재시도합니다.
         f"MaxRetries: 1\nRetryTime: 3\nWaitTime: 30\n"
