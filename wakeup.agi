@@ -776,7 +776,8 @@ def main() -> int:
             return fail("input", f"범위를 벗어났습니다: {hh}:{mm:02d}")
 
         dp, tp = day_pieces(days), time_pieces(hh, mm, with_day=True)
-        agi.set_var("WK_DISPLAY", f"{day_short(days)} {hh:02d}:{mm:02d}")
+        # 화면은 좁아서 붙여 씁니다 (item_short 와 같은 "평일07:30" 형식).
+        agi.set_var("WK_DISPLAY", f"{day_short(days)}{hh:02d}:{mm:02d}")
         agi.set_var("WK_TEXT", f"{day_text(days)} {time_text(hh, mm, True)}")
 
         dup = any(str(r.get("ext")) == ext and r.get("days") == days
@@ -791,7 +792,7 @@ def main() -> int:
         if dup:
             agi.set_var("WK_CONFIRM", playlist(dp + [SIL] + tp + [SIL, "g-dup"]))
             agi.set_var("WK_ERR", "dup")
-            agi.set_var("WK_DISPLAY", f"{day_short(days)} {hh:02d}:{mm:02d} 이미 있음")
+            agi.set_var("WK_DISPLAY", f"{day_short(days)}{hh:02d}:{mm:02d} 이미 있음")
             agi.set_var("WK_OK", "1")
             log(f"DUP-RULE ext={ext} days={days} {hh:02d}:{mm:02d}")
             return 0
