@@ -40,7 +40,7 @@ else
   while read -r n d; do DEST[$n]="$d"; done < <(
     echo "$LIVE" | grep -oE '"\$\{SEL\}" = "[0-9]"\]\?[a-z-]+' \
                  | sed 's/.*= "\([0-9]\)"\]?\(.*\)/\1 \2/')
-  for n in 1 2 3 9; do
+  for n in 1 2 3 4; do
     printf '  %s번 -> %s\n' "$n" "${DEST[$n]:-(없음)}"
   done
   # 음성이 무엇이라고 말하는지와 맞는지 확인
@@ -49,10 +49,10 @@ else
     && ok "1번 = 몇 분 후 (wk-after)" \
     || bad "1번이 ${DEST[1]:-없음} 로 갑니다. wk-after 여야 합니다"
   [[ "${DEST[2]:-}" == "$EXPECT_2" ]] \
-    && ok "2번 = 시각 (wk-time)" \
+    && ok "2번 = 시간 (wk-time)" \
     || bad "2번이 ${DEST[2]:-없음} 로 갑니다. wk-time 여야 합니다"
   [[ "${DEST[3]:-}" == "wk-rep" ]] && ok "3번 = 반복" || bad "3번 목적지 이상"
-  [[ "${DEST[9]:-}" == "wakeup-list" ]] && ok "9번 = 확인·삭제" || bad "9번 목적지 이상"
+  [[ "${DEST[4]:-}" == "wakeup-list" ]] && ok "4번 = 목록 확인" || bad "4번 목적지 이상"
 fi
 
 # 콜백 진입점과 발신 컨텍스트가 로드됐는지
