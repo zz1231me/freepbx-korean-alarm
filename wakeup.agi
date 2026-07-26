@@ -391,7 +391,7 @@ def make_call_file(ext: str, target: datetime, tag: str = "once") -> Path:
     tmp.write_text(
         f"; 알림전화 — {target:%Y-%m-%d %H:%M} / 내선 {ext} / {tag}\n"
         f"Channel: Local/{ext}@from-internal\n"
-        f'CallerID: "시간 알림" <7000>\n'
+        f'CallerID: "시간 알림 서비스" <7000>\n'
         f"WaitTime: {RING_SEC}\nMaxRetries: {MAX_RETRY}\nRetryTime: {RETRY_SEC}\n"
         f"Context: {DEST_CTX}\nExtension: s\nPriority: 1\n"
         f"Setvar: WAKEUP_EXT={ext}\n"
