@@ -1,0 +1,9 @@
+[Unit]
+Description=반복 알림 규칙을 오늘치 call file 로 펼치기
+After=asterisk.service
+Wants=asterisk.service
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/usr/local/bin/wk-daily.py

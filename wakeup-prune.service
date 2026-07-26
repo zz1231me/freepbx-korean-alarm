@@ -1,0 +1,14 @@
+[Unit]
+Description=지난 알림 call file 청소 (asterisk 가 뜨기 전에)
+Before=asterisk.service
+DefaultDependencies=no
+After=local-fs.target
+Wants=local-fs.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/wk-daily.py --prune
+RemainAfterExit=no
+
+[Install]
+WantedBy=multi-user.target

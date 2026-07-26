@@ -1,0 +1,10 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+
+# 로컬 비밀/환경 (혹시라도)
+*.env
+korean-voice.env

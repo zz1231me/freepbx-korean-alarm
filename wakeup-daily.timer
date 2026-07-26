@@ -1,0 +1,13 @@
+[Unit]
+Description=매일 00:05 과 부팅 직후 반복 알림 펼치기
+
+[Timer]
+# 자정 직후 한 번
+OnCalendar=*-*-* 00:05:00
+# 서버가 꺼져 있어서 놓쳤으면 켜질 때 바로 실행
+Persistent=true
+# 부팅 2분 뒤에도 한 번 (asterisk 가 올라올 시간을 줍니다)
+OnBootSec=2min
+
+[Install]
+WantedBy=timers.target

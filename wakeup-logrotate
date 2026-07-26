@@ -1,0 +1,12 @@
+# 알림전화 로그가 무한정 커지지 않게. /etc/logrotate.d/wakeup 으로 설치됩니다.
+/var/log/asterisk/wakeup.log {
+    weekly
+    rotate 8
+    missingok
+    notifempty
+    compress
+    delaycompress
+    copytruncate
+    su asterisk asterisk
+    create 0664 asterisk asterisk
+}
