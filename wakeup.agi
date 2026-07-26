@@ -50,7 +50,7 @@ DEST_CTX = os.getenv("WK_DEST_CTX", "wakeup-call")
 # 수신으로 바꾸면 화면이 제대로 뜹니다.
 CB_MENU_CTX = os.getenv("WK_CB_MENU_CTX", "wakeup-menu")   # 콜백이 답하면 실행할 메뉴
 CB_DIAL_CTX = os.getenv("WK_CB_DIAL_CTX", "wakeup-cb-dial")  # 자동응답 헤더 붙여 발신
-CB_DELAY = int(os.getenv("WK_CB_DELAY", "0"))      # 끊자마자 바로 되건다 (0=즉시)
+CB_DELAY = int(os.getenv("WK_CB_DELAY", "1"))      # 끊고 1초 뒤 되건다 (0초는 너무 급함)
 
 RING_SEC = int(os.getenv("WK_RING_SEC", "60"))      # 한 번에 1분 울림
 MAX_RETRY = int(os.getenv("WK_MAX_RETRY", "2"))     # 안 받으면 2번 더 (합쳐서 3번)
