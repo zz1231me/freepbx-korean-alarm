@@ -8,7 +8,7 @@
 #
 # 하는 일
 #   1) ffmpeg 설치, venv 만들고 TTS 라이브러리 설치
-#   2) 한국어 안내 음성 조각 169개 생성  <- 여기서만 인터넷/TTS 를 씁니다
+#   2) 한국어 안내 음성 조각 172개 생성  <- 여기서만 인터넷/TTS 를 씁니다
 #   3) wakeup.agi 를 Asterisk AGI 폴더에 설치
 #   4) 옛 wakeup-* 다이얼플랜을 한국어 버전으로 교체 (백업 후)
 #
@@ -117,7 +117,7 @@ MSG
 fi
 
 #------------------------------------------------------------------------------
-log "2/4  한국어 안내 음성 만들기 (169개, 몇 분 걸립니다)"
+log "2/4  한국어 안내 음성 만들기 (172개, 몇 분 걸립니다)"
 #------------------------------------------------------------------------------
 install -m 0755 "$HERE/make-korean-sounds.py" /usr/local/bin/make-korean-sounds.py
 if ! TTS="$TTS" TTS_VOICE="$VOICE" OPENAI_API_KEY="${OPENAI_API_KEY:-}" \
@@ -133,9 +133,9 @@ fi
 
 N=$(find "$SOUNDS/bank" -name '*.wav' | wc -l)
 N16=$(find "$SOUNDS/bank" -name '*.wav16' | wc -l)
-echo "  조각 ${N}/169 개 (8kHz) + ${N16}/169 개 (16kHz)"
-(( N16 >= 169 )) || warn "16kHz 판이 부족합니다. G.722 통화에서 소리가 뭉개질 수 있습니다"
-(( N >= 169 )) || warn "조각이 부족합니다. 부족한 시각은 안내가 조용할 수 있습니다"
+echo "  조각 ${N}/172 개 (8kHz) + ${N16}/172 개 (16kHz)"
+(( N16 >= 172 )) || warn "16kHz 판이 부족합니다. G.722 통화에서 소리가 뭉개질 수 있습니다"
+(( N >= 172 )) || warn "조각이 부족합니다. 부족한 시각은 안내가 조용할 수 있습니다"
 
 #------------------------------------------------------------------------------
 log "3/4  AGI 설치"
@@ -210,7 +210,7 @@ cat <<EOF
    1. Admin -> Custom Destinations   Target: wakeup-book,s,1  (설명: 알람전화)
    2. Applications -> Misc Applications   Feature Code: 7000
    3. Apply Config
-   (번호는 7000 하나뿐입니다. 확인/삭제는 메뉴 9번입니다.)
+   (번호는 7000 하나뿐입니다. 확인/삭제는 메뉴 4번입니다.)
 
  통화 중 전화기 화면에 안내가 안 뜬다면
    Applications -> Extensions -> 내선 -> Advanced 탭
@@ -222,14 +222,15 @@ cat <<EOF
 
  사용  —  7000 하나만 기억하시면 됩니다
    7000 -> "안녕하세요. 알림 써비스입니다."
-        -> "몇 분 뒤에 알람을 받으시려면 일번, 시각을 정해 두시려면 이번,
-            반복 알람을 맞추시려면 삼번, 예약을 확인하거나 삭제하시려면 구번."
+        -> (한 항목씩 화면 넘기며) "몇 분 뒤에 알람을 받으시려면 일번,
+            시간을 정해 두시려면 이번, 반복 알람을 맞추시려면 삼번,
+            예약 목록을 확인하시려면 사번."
 
      1번  30          -> "삼십 분 뒤 알람 설정하였습니다"
      2번  1900        -> "오늘 저녁 일곱시 정각 알람 설정하였습니다"
      3번  1 → 0730    -> "평일 오전 일곱시 반 알람 설정하였습니다.
                           내일부터 시작합니다"
-     9번             -> "예약된 알람입니다." (한 건씩)
+     4번             -> "예약된 알람입니다." (한 건씩)
                           "매일 오전 일곱 시. 수정 일번, 삭제 이번, 다음 구번."
                            1=수정(지우고 다시), 2=삭제, 9=다음, *=끝
 
@@ -246,8 +247,8 @@ cat <<EOF
 
  확인
    sudo wk-verify.sh                    <- 깔린 것과 소스를 전부 대조합니다
-   ls /var/lib/asterisk/sounds/custom/bank/*.wav | wc -l   # 169 이어야 합니다
-   ls /var/lib/asterisk/sounds/custom/bank/*.wav16 | wc -l # 169 (16kHz 판)
+   ls /var/lib/asterisk/sounds/custom/bank/*.wav | wc -l   # 172 이어야 합니다
+   ls /var/lib/asterisk/sounds/custom/bank/*.wav16 | wc -l # 172 (16kHz 판)
    ls -la --time-style=long-iso /var/spool/asterisk/outgoing/
    sudo asterisk -rx 'dialplan show wakeup-call'
    tail -f /var/log/asterisk/full
