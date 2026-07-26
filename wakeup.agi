@@ -490,10 +490,11 @@ def item_text(it: dict) -> str:
 
 
 def item_short(it: dict) -> str:
+    # 전화기 화면이 좁아 잘리므로 띄어쓰기 없이 붙입니다 (예 "평일07:00").
     if it["kind"] == "once":
         return f"{it['at']:%H:%M}"
     r = it["rule"]
-    return f"{day_short(r['days'])} {r['hh']:02d}:{r['mm']:02d}"
+    return f"{day_short(r['days'])}{r['hh']:02d}:{r['mm']:02d}"
 
 
 def remove_key(ext: str, key: str) -> bool:
@@ -659,8 +660,9 @@ def main() -> int:
         it = want[0]
         if not remove_key(ext, key):
             return fail("io", "삭제하지 못했습니다")
-        # 다이얼플랜은 WK_DISPLAY 로 화면만 갱신하고 g-deleted 를 직접 틉니다.
-        agi.set_var("WK_DISPLAY", f"{item_short(it)} 삭제")
+        # 다이얼플랜이 "${WK_DISPLAY} 삭제" 로 화면을 만드므로 여기선 '삭제'를
+        # 붙이지 않습니다 (붙이면 "… 삭제 삭제" 로 두 번 나옵니다).
+        agi.set_var("WK_DISPLAY", item_short(it))
         agi.set_var("WK_OK", "1")
         log(f"DEL ext={ext} no={a1} {item_text(it)} left={len(collect(ext))}")
         return 0
