@@ -48,7 +48,10 @@ DEST_CTX = os.getenv("WK_DEST_CTX", "wakeup-call")
 # 수신으로 바꾸면 화면이 제대로 뜹니다.
 CB_MENU_CTX = os.getenv("WK_CB_MENU_CTX", "wakeup-menu")   # 콜백이 답하면 실행할 메뉴
 CB_DIAL_CTX = os.getenv("WK_CB_DIAL_CTX", "wakeup-cb-dial")  # 자동응답 헤더 붙여 발신
-CB_DELAY = int(os.getenv("WK_CB_DELAY", "1"))      # 끊고 1초 뒤 되건다 (0초는 너무 급함)
+# 원래 7000 통화(wakeup-book 은 받고 약 1.3초 뒤 끊음)가 완전히 정리된 뒤에
+# 콜백이 들어와야 합니다. 너무 짧으면(=끊는 순간과 겹치면) 첫 콜백이 안 받아져
+# 부재중 00:00:00 이 하나 찍힙니다. 그래서 넉넉히 3초 뒤에 겁니다.
+CB_DELAY = int(os.getenv("WK_CB_DELAY", "3"))
 
 RING_SEC = int(os.getenv("WK_RING_SEC", "60"))      # 한 번에 1분 울림
 MAX_RETRY = int(os.getenv("WK_MAX_RETRY", "2"))     # 안 받으면 2번 더 (합쳐서 3번)
@@ -410,8 +413,10 @@ def make_callback_file(ext: str) -> Path:
         f"; 시간 알림 콜백 -> 내선 {ext}\n"
         f"Channel: Local/{ext}@{CB_DIAL_CTX}/n\n"
         f'CallerID: "시간 알림 서비스" <7000>\n'
-        # 원 통화가 채 안 끊겨 잠깐 통화중일 수 있어 3초 뒤 한 번 재시도합니다.
-        f"MaxRetries: 1\nRetryTime: 3\nWaitTime: 30\n"
+        # 재시도는 없앱니다. CB_DELAY(3초)로 원 통화가 끊긴 뒤에 걸므로 첫 시도가
+        # 곧바로 받아집니다. 재시도가 있으면 실패한 첫 시도가 부재중 00:00:00 으로
+        # 찍혔습니다 (그게 '자꾸 부재중 하나씩' 의 원인이었습니다).
+        f"MaxRetries: 0\nWaitTime: 30\n"
         f"Context: {CB_MENU_CTX}\nExtension: s\nPriority: 1\n"
         f"Archive: no\n", encoding="utf-8")
     when = datetime.now().timestamp() + CB_DELAY
