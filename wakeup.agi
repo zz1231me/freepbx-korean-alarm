@@ -143,13 +143,6 @@ def time_text(hh: int, mm: int, with_day: bool = False) -> str:
     return f"{PERIOD_TEXT[per]} {HOUR_WORD[hh % 12 or 12]} 시 {tail}"
 
 
-def display_text(hh: int, mm: int) -> str:
-    per = period_of(hh, mm)
-    if per in ("p-mid", "p-noon"):
-        return PERIOD_TEXT[per]
-    return f"{PERIOD_TEXT[per]} {hh % 12 or 12}:{mm:02d}"
-
-
 def rel_pieces(minutes: int) -> list[str]:
     """1번(몇 분 후)에서 들려줄 상대시각. "십 분 뒤", "한 시간 삼십 분 뒤"."""
     h, m = divmod(max(1, minutes), 60)
@@ -497,8 +490,12 @@ def item_text(it: dict) -> str:
 
 def item_short(it: dict) -> str:
     # 전화기 화면이 좁아 잘리므로 띄어쓰기 없이 붙입니다 (예 "평일07:00").
+    # once 도 반복과 같은 형식(2글자 머리말 + HH:MM, 24시간)으로 맞춥니다.
+    # 오늘/내일을 붙여 같은 시각의 오늘·내일 예약이 화면에서 구분됩니다.
     if it["kind"] == "once":
-        return f"{it['at']:%H:%M}"
+        t = it["at"]
+        head = "오늘" if t.date() == datetime.now().date() else "내일"
+        return f"{head}{t:%H:%M}"
     r = it["rule"]
     return f"{day_short(r['days'])}{r['hh']:02d}:{r['mm']:02d}"
 
@@ -732,8 +729,9 @@ def main() -> int:
         # 계산해서 되돌리면 초 버림 때문에 10 을 누르고 "구 분 뒤" 를 듣게 됩니다.
         said_min = int(a1) if mode.endswith("after") else mins
         rel = rel_pieces(said_min)
+        # 화면은 반복과 같은 압축형(오늘/내일 + HH:MM, 24시간). 음성은 12시간(오후 한 시).
         agi.set_var("WK_DISPLAY",
-                    ("오늘 " if today else "내일 ") + display_text(hh, mm))
+                    f"{'오늘' if today else '내일'}{hh:02d}:{mm:02d}")
         # 1번(몇 분 후)은 상대시각으로, 2번(시각)은 날짜+시각으로 들려줍니다.
         # 방금 누른 것을 그대로 되읽어 주는 쪽이 확인이 빠릅니다.
         if mode.endswith("after"):
@@ -753,8 +751,7 @@ def main() -> int:
             agi.set_var("WK_ERR", "dup")
             # 반복(peek-rep)과 화면 문구를 맞춥니다 ("… 이미 있음")
             agi.set_var("WK_DISPLAY",
-                        ("오늘 " if today else "내일 ")
-                        + display_text(hh, mm) + " 이미 있음")
+                        f"{'오늘' if today else '내일'}{hh:02d}:{mm:02d} 이미 있음")
             agi.set_var("WK_OK", "1")
             log(f"DUP ext={ext} at={target:%F %H:%M}")
             return 0
