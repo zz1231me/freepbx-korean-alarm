@@ -244,6 +244,19 @@ def day_short(days: list[int]) -> str:
     return "".join(DAY_SHORT[d] for d in days)
 
 
+def day_input(days: list[int]) -> str:
+    """반복 알림을 '수정'할 때 요일 선택을 건너뛰고 시각만 다시 받도록,
+    원래 요일을 다이얼플랜의 DAY 입력값으로 되돌립니다.
+    (0=평일, 8=주말, 9=매일, 그 외는 요일 숫자를 이어붙임 → parse_days 가 그대로 해석)"""
+    if days == [1, 2, 3, 4, 5]:
+        return "0"
+    if days == [6, 7]:
+        return "8"
+    if days == [1, 2, 3, 4, 5, 6, 7]:
+        return "9"
+    return "".join(str(d) for d in days)
+
+
 def next_occurrence(days: list[int], hh: int, mm: int, now: datetime) -> datetime:
     for i in range(8):
         d = now + timedelta(days=i)
@@ -683,6 +696,9 @@ def main() -> int:
         agi.set_var("WK_KIND", it["kind"])       # once | rep
         agi.set_var("WK_KEY", key)
         agi.set_var("WK_TEXT", item_text(it))
+        # 수정 시 요일 선택을 건너뛰고 시각만 다시 받도록, 원래 요일을 DAY 입력값으로.
+        if it["kind"] == "rep":
+            agi.set_var("WK_DAYS", day_input(it["rule"]["days"]))
         agi.set_var("WK_OK", "1")
         return 0
 
