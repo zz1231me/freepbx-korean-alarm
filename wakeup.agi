@@ -390,8 +390,9 @@ def make_call_file(ext: str, target: datetime, tag: str = "once") -> Path:
         f"Setvar: WAKEUP_EXT={ext}\n"
         f"Setvar: WAKEUP_TIME={hh:02d}:{mm:02d}\n"
         f"Setvar: WAKEUP_EPOCH={int(target.timestamp())}\n"
-        # "안녕하세요. 알림 써비스입니다. 현재 시각은 …입니다."
-        f"Setvar: WK_SEQ={playlist(['sil-500', 'g-hello', 'g-intro', 'g-nowtime'] + pieces + ['g-isnida'])}\n"
+        # "안녕하세요. (쉼) 현재 시각은 …입니다. (쉼) 감사합니다."
+        # 문장 사이에 sil-250 을 끼워 급하지 않게 읽어 줍니다.
+        f"Setvar: WK_SEQ={playlist(['sil-500', 'g-hello', 'sil-250', 'g-nowtime'] + pieces + ['g-isnida', 'sil-250', 'g-thanks'])}\n"
         f"Setvar: WK_DISPLAY=시간 알림\n"
         f"Archive: yes\n", encoding="utf-8")
     os.utime(tmp, (target.timestamp(), target.timestamp()))
