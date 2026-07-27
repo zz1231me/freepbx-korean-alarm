@@ -49,7 +49,6 @@ DEST_CTX = os.getenv("WK_DEST_CTX", "wakeup-call")
 CB_MENU_CTX = os.getenv("WK_CB_MENU_CTX", "wakeup-menu")   # 콜백이 답하면 실행할 메뉴
 CB_DIAL_CTX = os.getenv("WK_CB_DIAL_CTX", "wakeup-cb-dial")  # 자동응답 헤더 붙여 발신
 CB_DELAY = int(os.getenv("WK_CB_DELAY", "1"))      # 끊고 1초 뒤 되건다 (0초는 너무 급함)
-CB_RETRY_DELAY = int(os.getenv("WK_CB_RETRY_DELAY", "60"))  # 무입력이면 1분 뒤 한 번 더
 
 RING_SEC = int(os.getenv("WK_RING_SEC", "60"))      # 한 번에 1분 울림
 MAX_RETRY = int(os.getenv("WK_MAX_RETRY", "2"))     # 안 받으면 2번 더 (합쳐서 3번)
@@ -158,7 +157,7 @@ def rel_text(minutes: int) -> str:
     h, m = divmod(max(1, minutes), 60)
     parts = ([f"{DUR_HOUR[h]} 시간"] if h and h in DUR_HOUR else []) \
         + ([f"{sino(m)} 분"] if (m or not h) else [])
-    return " ".join(parts) + " 뒤"
+    return " ".join(parts) + " 후"
 
 
 def until_pieces(minutes: int) -> list[str]:
@@ -402,30 +401,24 @@ def make_call_file(ext: str, target: datetime, tag: str = "once") -> Path:
     return dest
 
 
-def make_callback_file(ext: str, attempt: int = 0) -> Path:
+def make_callback_file(ext: str) -> Path:
     """지금 이 내선으로 되거는 call file. CB_DELAY 초 뒤에 발사되도록
     mtime 을 미래로 잡습니다 (원래 7000 통화가 끊길 시간을 줍니다).
     답하면 Context=CB_MENU_CTX(메뉴)로 들어갑니다. 자동응답 헤더는
     Channel 이 거치는 CB_DIAL_CTX 에서 붙습니다."""
     STAGING.mkdir(parents=True, exist_ok=True)
     SPOOL.mkdir(parents=True, exist_ok=True)
-    name = f"wakeup-cb-{ext}-{attempt}-{os.getpid()}.call"
+    name = f"wakeup-cb-{ext}-{os.getpid()}.call"
     tmp = STAGING / name
     tmp.write_text(
-        f"; 시간 알림 콜백 -> 내선 {ext} (attempt {attempt})\n"
+        f"; 시간 알림 콜백 -> 내선 {ext}\n"
         f"Channel: Local/{ext}@{CB_DIAL_CTX}/n\n"
         f'CallerID: "시간 알림 서비스" <7000>\n'
-        # 즉시(0초) 걸므로 원 통화가 채 안 끊겨 잠깐 통화중일 수 있습니다.
-        # 그 경우 3초 뒤 한 번 재시도합니다.
+        # 원 통화가 채 안 끊겨 잠깐 통화중일 수 있어 3초 뒤 한 번 재시도합니다.
         f"MaxRetries: 1\nRetryTime: 3\nWaitTime: 30\n"
         f"Context: {CB_MENU_CTX}\nExtension: s\nPriority: 1\n"
-        # 메뉴가 재콜백을 걸 수 있게 대상 내선과 시도 횟수를 넘겨 줍니다.
-        f"Setvar: WK_CB_EXT={ext}\n"
-        f"Setvar: WK_CB_ATTEMPT={attempt}\n"
         f"Archive: no\n", encoding="utf-8")
-    # 첫 콜백은 즉시(CB_DELAY), 무입력 재콜백은 CB_RETRY_DELAY(1분) 뒤.
-    delay = CB_DELAY if attempt == 0 else CB_RETRY_DELAY
-    when = datetime.now().timestamp() + delay
+    when = datetime.now().timestamp() + CB_DELAY
     os.utime(tmp, (when, when))
     as_asterisk(tmp)
     dest = SPOOL / name
@@ -630,14 +623,13 @@ def main() -> int:
         return 0
 
     if mode == "callback":
-        # 7000 진입점(attempt 0) 또는 메뉴 무입력 재콜백(attempt 1) 요청.
-        attempt = int(a1) if a1.isdigit() else 0
+        # 7000 진입점: 끊고 이 내선으로 되걸어 '수신'으로 메뉴를 진행합니다.
         try:
-            p = make_callback_file(ext, attempt)
+            p = make_callback_file(ext)
         except OSError as e:
             return fail("io", f"콜백 call file 실패: {e}")
         agi.set_var("WK_OK", "1")
-        log(f"CALLBACK ext={ext} attempt={attempt} file={p.name}")
+        log(f"CALLBACK ext={ext} file={p.name}")
         return 0
 
     now = datetime.now()
