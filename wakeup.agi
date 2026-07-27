@@ -376,7 +376,6 @@ def save_rules(rules: list[dict]) -> None:
 # ------------------------------------------------------------------ 예약
 def make_call_file(ext: str, target: datetime, tag: str = "once") -> Path:
     hh, mm = target.hour, target.minute
-    pieces = time_pieces(hh, mm)
     STAGING.mkdir(parents=True, exist_ok=True)
     SPOOL.mkdir(parents=True, exist_ok=True)
     name = f"wakeup-{ext}-{hh:02d}{mm:02d}-{tag}-{os.getpid()}.call"
@@ -389,11 +388,7 @@ def make_call_file(ext: str, target: datetime, tag: str = "once") -> Path:
         f"Context: {DEST_CTX}\nExtension: s\nPriority: 1\n"
         f"Setvar: WAKEUP_EXT={ext}\n"
         f"Setvar: WAKEUP_TIME={hh:02d}:{mm:02d}\n"
-        f"Setvar: WAKEUP_EPOCH={int(target.timestamp())}\n"
-        # "[시각]입니다. (쉼) 감사합니다."  ('현재 시각은' 은 뺐습니다)
-        # 벨 뒤 1초 쉬는 건 다이얼플랜이 하고, 여기선 '입니다'와 '감사합니다' 사이만 sil-250.
-        f"Setvar: WK_SEQ={playlist(pieces + ['g-isnida', 'sil-250', 'g-thanks'])}\n"
-        f"Setvar: WK_DISPLAY=시간 알림\n"
+        # 멘트 없이 알림음만 울립니다(다이얼플랜에서 '지금 HH:MM' 화면 + 벨 10초).
         f"Archive: yes\n", encoding="utf-8")
     os.utime(tmp, (target.timestamp(), target.timestamp()))
     as_asterisk(tmp)
