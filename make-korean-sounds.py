@@ -30,7 +30,9 @@ TTS = os.getenv("TTS", "gtts")
 
 # OpenAI 를 쓸 때만 의미가 있습니다
 TTS_MODEL = os.getenv("TTS_MODEL", "gpt-4o-mini-tts")
-TTS_VOICE = os.getenv("TTS_VOICE", "cedar")   # 공식 문서 기준 최고 품질(marin/cedar)
+TTS_VOICE = os.getenv("TTS_VOICE", "alloy")   # 조각을 이어 붙이므로 편차 적은 밋밋한 목소리
+# (cedar/marin 은 표현력이 좋지만 조각마다 편차가 커서 이어 붙이면 튑니다.
+#  alloy 는 담담·균일해서 조각 합성에 잘 맞습니다. 다른 목소리는 --voice 로.)
 # 조각을 하나씩 따로 생성해서 '이어 붙이기' 때문에, 조각마다 목소리가 흔들리면
 # 합쳤을 때 편차가 도드라집니다. 그래서 프롬프트의 최우선 목표는 '매번 똑같이'입니다.
 # (gpt-4o-mini-tts 는 seed/temperature 를 못 줘서 편차를 0 으로는 못 만듭니다.
@@ -70,7 +72,6 @@ DAYS = {1: "월요일", 2: "화요일", 3: "수요일", 4: "목요일",
         5: "금요일", 6: "토요일", 7: "일요일"}
 
 GREETINGS = {
-    # "알람 전화입니다" 를 cedar 가 "알람 저머입니다" 로 읽었습니다.
     # '서비스' 는 첫 음절 '서'가 전화 음질에서 약해 흐릿하게 들립니다.
     # 실제 발음대로 '써비스' 로 적으면 된소리가 또렷하게 살아납니다.
     "g-intro":     "시간 알림 써비스입니다.",

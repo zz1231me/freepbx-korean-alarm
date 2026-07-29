@@ -295,9 +295,10 @@ sudo ./install-korean-voice.sh --tts openai
 
 **번호는 7000 하나뿐입니다.** 확인·삭제는 메뉴 4번으로 들어갑니다.
 
-기본 목소리는 `cedar`(공식 문서 기준 최고 품질), 말 속도는 평소의 90%입니다.
-바꾸려면 `--voice marin` 처럼 주거나 `make-korean-sounds.py` 의
-`TTS_INSTRUCTIONS` 에서 퍼센트를 조정하세요.
+기본 목소리는 `alloy`, 말 속도는 평소의 90%입니다. 조각을 이어 붙이는 방식이라
+표현력이 큰 목소리(cedar·marin)는 조각마다 편차가 커서 튀고, 담담한 `alloy` 가
+합성에 더 균일합니다. 바꾸려면 `--voice cedar` 처럼 주거나 `make-korean-sounds.py`
+의 `TTS_INSTRUCTIONS` 에서 퍼센트를 조정하세요.
 (alloy ash ballad coral echo fable nova onyx sage shimmer verse marin cedar)
 
 ### 안내 문구를 고쳤을 때 (음성 다시 만들기)
