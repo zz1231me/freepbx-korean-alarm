@@ -10,6 +10,8 @@
     AGI(wakeup.agi,list,,${UNIQUEID},${CALLERID(num)})     목록 읽어 주기
     AGI(wakeup.agi,del,N,${UNIQUEID},${CALLERID(num)})     N번 삭제 (0 이면 전부)
     AGI(wakeup.agi,undo,KEY,,${CALLERID(num)})             방금 만든 예약 취소
+    AGI(wakeup.agi,callback,,,EXT)                         그 내선으로 콜백 걸기
+    AGI(wakeup.agi,sound-set,TONE,,${CALLERID(num)})       기본 알람 소리 저장
     AGI(wakeup.agi,prune,,,0)                              지난 call file 청소
 
 DAYS  "0"=평일(월~금)  "8"=주말(토일)  "9"=매일  그 외는 1=월 … 7=일 을 이어서
