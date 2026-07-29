@@ -12,14 +12,14 @@
 #   3) wakeup.agi 를 Asterisk AGI 폴더에 설치
 #   4) 옛 wakeup-* 다이얼플랜을 한국어 버전으로 교체 (백업 후)
 #
-#   목소리: 기본 nova. --voice cedar / marin ... 로 바꿀 수 있습니다.
+#   목소리: 기본 coral(따뜻·친근). --voice cedar / marin ... 로 바꿀 수 있습니다.
 #
 # 끝나면 웹에서 번호만 연결하면 됩니다 (안내가 나옵니다).
 #==============================================================================
 set -euo pipefail
 
 TTS="gtts"
-VOICE="${TTS_VOICE:-nova}"   # 밝고 또렷하며 비교적 균일(cedar 는 편차 큼)
+VOICE="${TTS_VOICE:-coral}"   # 따뜻하고 친근한 목소리(cedar 는 편차 큼)
 KEYFILE="/etc/korean-voice.env"
 VENV="/opt/korean-voice/venv"
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
