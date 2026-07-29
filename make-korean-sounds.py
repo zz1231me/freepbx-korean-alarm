@@ -4,6 +4,8 @@
     python3 make-korean-sounds.py                    # gTTS (무료, 키 필요 없음)
     TTS=openai python3 make-korean-sounds.py         # OpenAI (OPENAI_API_KEY 필요)
     TTS=espeak python3 make-korean-sounds.py         # 오프라인 (발음 어색함)
+    ... --force                                      # 이미 있어도 전부 다시 만듭니다
+    ... --only g-menu-4,m-40                          # 튀는 조각만 콕 집어 다시 생성
 
 만들어지는 것 (/var/lib/asterisk/sounds/custom/bank/)
     p-*        새벽 오전 오후 저녁 밤 정오 자정
@@ -372,8 +374,30 @@ def preflight() -> None:
 
 def main() -> int:
     BANK.mkdir(parents=True, exist_ok=True)
-    todo = targets()
+    all_targets = targets()
     force = "--force" in sys.argv
+
+    # --only g-menu-4,m-40  : 들어보고 튀는 조각만 콕 집어 다시 생성합니다.
+    #   (지정한 것은 이미 있어도 무조건 다시 만듭니다. 나머지는 안 건드립니다.)
+    todo = all_targets
+    if "--only" in sys.argv:
+        i = sys.argv.index("--only")
+        want = set()
+        if i + 1 < len(sys.argv):
+            want = {s.strip() for s in sys.argv[i + 1].split(",") if s.strip()}
+        if not want:
+            raise SystemExit("사용법: make-korean-sounds.py --only g-menu-4,m-40")
+        known = {b.name for b, _ in all_targets}
+        unknown = sorted(want - known)
+        if unknown:
+            print(f"[!] 모르는 조각 이름 {len(unknown)}개(무시): {unknown}")
+        todo = [(b, t) for b, t in all_targets if b.name in want]
+        if not todo:
+            raise SystemExit("--only 에 맞는 조각이 없습니다. 이름을 확인하세요.")
+        force = True
+        print(f"--only: {len(todo)}개만 다시 생성합니다 → "
+              f"{', '.join(b.name for b, _ in todo)}")
+
     made = skipped = 0
     fail: list[str] = []
 
@@ -410,8 +434,9 @@ def main() -> int:
     print(f"새로 만듦 : {made}개")
     print(f"이미 있음 : {skipped}개   (--force 로 다시 만듭니다)")
 
-    # 빠진 조각 검사 — 하나만 없어도 그 시각 안내가 조용해집니다
-    need = [b.name for b, _ in todo]
+    # 빠진 조각 검사 — 하나만 없어도 그 시각 안내가 조용해집니다.
+    # (--only 로 일부만 만들었어도 전체 기준으로 검사합니다)
+    need = [b.name for b, _ in all_targets]
     have = {p.stem for p in BANK.glob("*.wav")}
     missing = [n for n in need if n not in have]
     short = [p.name for p in BANK.glob("*.wav")
