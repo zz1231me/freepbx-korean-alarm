@@ -40,8 +40,13 @@ SPOOL = Path(os.getenv("WK_SPOOL", "/var/spool/asterisk/outgoing"))
 STAGING = Path(os.getenv("WK_STAGING", "/var/spool/asterisk/tmp"))
 STATE = Path(os.getenv("WK_STATE", "/var/lib/asterisk/wakeup"))
 RULES = STATE / "rules.json"
+SOUND_CFG = STATE / "sounds.json"     # 내선별 기본 알람 소리 {"7001": "radar", ...}
 LOG = Path(os.getenv("WK_LOG", "/var/log/asterisk/wakeup.log"))
 DEST_CTX = os.getenv("WK_DEST_CTX", "wakeup-call")
+
+# 알람 프리셋 톤. 이 이름들은 다이얼플랜 [wk-tone] 의 확장자와 반드시 같아야 합니다.
+VALID_TONES = ["marimba", "radar", "morning", "drops", "classic", "urgent"]
+DEFAULT_TONE = "marimba"
 
 # 콜백 방식: 7000 을 걸면 끊고, 시스템이 그 내선으로 되걸어 '수신'으로 메뉴를
 # 진행합니다. 발신 통화는 화면 갱신이 잘 안 되는 기종이 있어(내가 발신자),
@@ -389,6 +394,39 @@ def save_rules(rules: list[dict]) -> None:
     tmp.replace(RULES)
 
 
+# --------------------------------------------------- 내선별 기본 알람 소리(프리셋)
+def load_sound(ext: str) -> str:
+    """이 내선이 고른 기본 알람 소리(프리셋 이름). 없거나 모르는 값이면 기본값."""
+    try:
+        data = json.loads(SOUND_CFG.read_text(encoding="utf-8"))
+        t = data.get(str(ext))
+        return t if t in VALID_TONES else DEFAULT_TONE
+    except (OSError, ValueError):
+        return DEFAULT_TONE
+
+
+def save_sound(ext: str, tone: str) -> None:
+    with rules_lock():                       # 규칙과 같은 잠금을 씁니다(경합 드묾)
+        try:
+            data = json.loads(SOUND_CFG.read_text(encoding="utf-8"))
+            if not isinstance(data, dict):
+                data = {}
+        except (OSError, ValueError):
+            data = {}
+        data[str(ext)] = tone
+        STATE.mkdir(parents=True, exist_ok=True)
+        as_asterisk(STATE)
+        tmp = SOUND_CFG.with_suffix(".tmp")
+        tmp.write_text(json.dumps(data, ensure_ascii=False, indent=1),
+                       encoding="utf-8")
+        try:
+            os.chmod(tmp, 0o664)
+        except OSError:
+            pass
+        as_asterisk(tmp)
+        tmp.replace(SOUND_CFG)
+
+
 # ------------------------------------------------------------------ 예약
 def make_call_file(ext: str, target: datetime, tag: str = "once") -> Path:
     hh, mm = target.hour, target.minute
@@ -404,7 +442,8 @@ def make_call_file(ext: str, target: datetime, tag: str = "once") -> Path:
         f"Context: {DEST_CTX}\nExtension: s\nPriority: 1\n"
         f"Setvar: WAKEUP_EXT={ext}\n"
         f"Setvar: WAKEUP_TIME={hh:02d}:{mm:02d}\n"
-        # 멘트 없이 알림음만 울립니다(다이얼플랜에서 '지금 HH:MM' 화면 + 벨 10초).
+        # 멘트 없이 알림음만. 이 내선이 고른 프리셋 톤을 다이얼플랜이 재생합니다.
+        f"Setvar: WK_TONE={load_sound(ext)}\n"
         f"Archive: yes\n", encoding="utf-8")
     os.utime(tmp, (target.timestamp(), target.timestamp()))
     as_asterisk(tmp)
@@ -644,6 +683,18 @@ def main() -> int:
             return fail("io", f"콜백 call file 실패: {e}")
         agi.set_var("WK_OK", "1")
         log(f"CALLBACK ext={ext} file={p.name}")
+        return 0
+
+    if mode == "sound-set":
+        # 메뉴 5번에서 고른 프리셋을 이 내선의 기본 알람 소리로 저장합니다.
+        if a1 not in VALID_TONES:
+            return fail("input", f"모르는 소리: {a1!r}")
+        try:
+            save_sound(ext, a1)
+        except OSError as e:
+            return fail("io", f"소리 저장 실패: {e}")
+        agi.set_var("WK_OK", "1")
+        log(f"SOUND ext={ext} tone={a1}")
         return 0
 
     now = datetime.now()

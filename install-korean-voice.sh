@@ -8,7 +8,7 @@
 #
 # 하는 일
 #   1) ffmpeg 설치, venv 만들고 TTS 라이브러리 설치
-#   2) 한국어 안내 음성 조각 158개 생성  <- 여기서만 인터넷/TTS 를 씁니다
+#   2) 한국어 안내 음성 조각 159개 생성  <- 여기서만 인터넷/TTS 를 씁니다
 #   3) wakeup.agi 를 Asterisk AGI 폴더에 설치
 #   4) 옛 wakeup-* 다이얼플랜을 한국어 버전으로 교체 (백업 후)
 #
@@ -117,7 +117,7 @@ MSG
 fi
 
 #------------------------------------------------------------------------------
-log "2/4  한국어 안내 음성 만들기 (158개, 몇 분 걸립니다)"
+log "2/4  한국어 안내 음성 만들기 (159개, 몇 분 걸립니다)"
 #------------------------------------------------------------------------------
 install -m 0755 "$HERE/make-korean-sounds.py" /usr/local/bin/make-korean-sounds.py
 if ! TTS="$TTS" TTS_VOICE="$VOICE" OPENAI_API_KEY="${OPENAI_API_KEY:-}" \
@@ -133,9 +133,9 @@ fi
 
 N=$(find "$SOUNDS/bank" -name '*.wav' | wc -l)
 N16=$(find "$SOUNDS/bank" -name '*.wav16' | wc -l)
-echo "  조각 ${N}/158 개 (8kHz) + ${N16}/158 개 (16kHz)"
-(( N16 >= 158 )) || warn "16kHz 판이 부족합니다. G.722 통화에서 소리가 뭉개질 수 있습니다"
-(( N >= 158 )) || warn "조각이 부족합니다. 부족한 시각은 안내가 조용할 수 있습니다"
+echo "  조각 ${N}/159 개 (8kHz) + ${N16}/159 개 (16kHz)"
+(( N16 >= 159 )) || warn "16kHz 판이 부족합니다. G.722 통화에서 소리가 뭉개질 수 있습니다"
+(( N >= 159 )) || warn "조각이 부족합니다. 부족한 시각은 안내가 조용할 수 있습니다"
 
 #------------------------------------------------------------------------------
 log "3/4  AGI 설치"
@@ -247,8 +247,8 @@ cat <<EOF
 
  확인
    sudo wk-verify.sh                    <- 깔린 것과 소스를 전부 대조합니다
-   ls /var/lib/asterisk/sounds/custom/bank/*.wav | wc -l   # 158 이어야 합니다
-   ls /var/lib/asterisk/sounds/custom/bank/*.wav16 | wc -l # 158 (16kHz 판)
+   ls /var/lib/asterisk/sounds/custom/bank/*.wav | wc -l   # 159 이어야 합니다
+   ls /var/lib/asterisk/sounds/custom/bank/*.wav16 | wc -l # 159 (16kHz 판)
    ls -la --time-style=long-iso /var/spool/asterisk/outgoing/
    sudo asterisk -rx 'dialplan show wakeup-call'
    tail -f /var/log/asterisk/full
