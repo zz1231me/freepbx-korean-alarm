@@ -255,6 +255,14 @@ SILENCE_TRIM = (
 TARGET_RMS_DB = -20.0    # 조각들의 평균 음량을 여기로 통일
 PEAK_CEIL_DB = -1.0      # 이보다 크게는 안 올려서 클리핑(찌그러짐)을 막음
 
+# 전화기(작은 스피커, 8kHz 대역)에서 말이 또렷하게 들리도록 하는 '클리어 필터'.
+#   highpass=250  : 250Hz 아래 웅웅거림 제거 (전화 대역 밖이라 버려도 무손실, 소리가 맑아짐)
+#   equalizer     : 자음이 사는 2.5kHz 를 +3dB 살짝 올려 또렷하게(치찰음 안 나게 완만히)
+# 컴프레서/loudnorm 은 '커졌다 작아졌다(펌핑)' 때문에 안 씁니다. 음량은 뒤에서 상수 이득으로 통일.
+# 소리가 오히려 날카로우면 WK_CLARITY=0 으로 끄고 다시 생성하세요.
+CLARITY = os.getenv("WK_CLARITY", "1") not in ("0", "no", "false", "")
+CLARITY_FILTER = "highpass=f=250,equalizer=f=2500:width_type=q:w=1.5:g=3"
+
 
 def _measure_gain_db(wav: Path) -> float:
     """volumedetect 로 평균/최대 음량을 재서 '고정 이득'을 계산합니다.
@@ -283,10 +291,14 @@ def _measure_gain_db(wav: Path) -> float:
 
 
 def _norm_pass(input_args: list[str], rate: int, dst: Path) -> None:
-    """무음 정리 + 리샘플 → 음량 측정 → 고정 이득 적용 (2단계)."""
+    """무음 정리 (+클리어 필터) + 리샘플 → 음량 측정 → 고정 이득 적용 (2단계).
+
+    필터를 음량 측정 '전에' 걸어야 정규화가 필터 후 레벨을 기준으로 잡습니다.
+    """
     pre = Path(str(dst) + ".pre.wav")
+    af = SILENCE_TRIM + ("," + CLARITY_FILTER if CLARITY else "")
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", *input_args,
-                    "-ac", "1", "-af", SILENCE_TRIM, "-ar", str(rate),
+                    "-ac", "1", "-af", af, "-ar", str(rate),
                     "-acodec", "pcm_s16le", "-f", "wav", str(pre)], check=True)
     gain = _measure_gain_db(pre)
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(pre),
